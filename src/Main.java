@@ -1,10 +1,15 @@
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 import java.io.FileWriter;
 
 
 public class Main{
+    // DAO usado para testar a integração com o banco de dados (Fase 5)
+    private static final UserDAO userDAO = new UserDAO();
+
     public static void main(String[] args) {
         try {
             // Initialize users
@@ -133,5 +138,74 @@ public class Main{
         catch (Exception e) {
             System.out.println("Erro inesperado: " + e.getMessage());
         }
+
+        // FASE 5 - TESTES DE INTEGRAÇÃO COM O BANCO DE DADOS (tabela tb_user)
+
+        System.out.println("\n===== TESTE DE INTEGRAÇÃO COM BANCO DE DADOS - TB_USER =====\n");
+
+        UUID idTeste = testarInsercao();
+        testarListagem();
+        testarBuscaPorId(idTeste);
+        testarAtualizacao(idTeste);
+        testarRemocao(idTeste);
+        testarListagem();
+
+        System.out.println("\n===== FIM DOS TESTES DE BANCO =====");
+    }
+
+    // Testa o INSERT (CREATE) e retorna o id gerado para os próximos testes
+    private static UUID testarInsercao() {
+        System.out.println(">> Testando INSERÇÃO...");
+        User novoUser = new User("teste@fiap.com.br", "senha123hash", "Usuário de Teste");
+        userDAO.inserir(novoUser);
+        System.out.println();
+        return novoUser.getId();
+    }
+
+    // Testa o SELECT de todos (READ)
+    private static void testarListagem() {
+        System.out.println(">> Testando LISTAGEM de todos os usuários...");
+        List<User> usuarios = userDAO.listarTodos();
+        if (usuarios.isEmpty()) {
+            System.out.println("Nenhum usuário cadastrado.");
+        } else {
+            for (User u : usuarios) {
+                System.out.println(u);
+            }
+        }
+        System.out.println();
+    }
+
+    // Testa o SELECT por id (READ)
+    private static void testarBuscaPorId(UUID id) {
+        System.out.println(">> Testando BUSCA por id...");
+        User user = userDAO.buscarPorId(id);
+        if (user != null) {
+            System.out.println("Encontrado: " + user);
+        } else {
+            System.out.println("Usuário não encontrado.");
+        }
+        System.out.println();
+    }
+
+    // Testa o UPDATE
+    private static void testarAtualizacao(UUID id) {
+        System.out.println(">> Testando ATUALIZAÇÃO...");
+        User user = userDAO.buscarPorId(id);
+        if (user != null) {
+            user.setName("Usuário Atualizado");
+            user.setEmail("atualizado@fiap.com.br");
+            userDAO.atualizar(user);
+        } else {
+            System.out.println("Usuário não encontrado para atualizar.");
+        }
+        System.out.println();
+    }
+
+    // Testa o DELETE
+    private static void testarRemocao(UUID id) {
+        System.out.println(">> Testando REMOÇÃO...");
+        userDAO.deletar(id);
+        System.out.println();
     }
 }
