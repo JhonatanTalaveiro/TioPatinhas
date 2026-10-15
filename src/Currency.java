@@ -13,6 +13,14 @@ public class Currency extends BaseEntity {
         this.isFiat = isFiat;
     }
 
+    public Currency(UUID id, String symbol, String name, boolean isFiat) {
+        this.id = id;
+
+        this.symbol = symbol;
+        this.name = name;
+        this.isFiat = isFiat;
+    }
+
     public String getSymbol() {
         return symbol;
     }
