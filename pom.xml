@@ -28,4 +28,11 @@
 
     </dependencies>
 
+    <build>
+        <!-- O código-fonte está em src/ e não em src/main/java, que é o layout
+             padrão do Maven. Esta linha aponta o Maven para a pasta que o
+             projeto já usa, evitando ter que mover todos os arquivos. -->
+        <sourceDirectory>src</sourceDirectory>
+    </build>
+
 </project>

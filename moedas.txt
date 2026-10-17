@@ -1,4 +1,4 @@
-Currency{id=fcc4ad40-e9c4-472f-91ea-683db55567fa, symbol='BRL', name='Real Brasileiro', isFiat=true}
-Currency{id=d9fd8353-335d-494a-805a-d6968cf7064f, symbol='USD', name='Dólar dos Estados Unidos', isFiat=true}
-Currency{id=413b74f7-ff2e-4be5-9afb-3a083d97d3bd, symbol='BTC', name='Bitcoin', isFiat=false}
-Currency{id=48bc4eb3-9a83-4ce3-9f86-a23c8f2a007e, symbol='ETH', name='Ethereum', isFiat=false}
+Currency{id=f29e6415-f394-402c-95a1-23004ce96fbe, symbol='BRL', name='Real Brasileiro', isFiat=true}
+Currency{id=6dc37101-d12b-4e6c-b97c-46106846b171, symbol='USD', name='Dólar dos Estados Unidos', isFiat=true}
+Currency{id=10bb8810-37bb-46d2-8b78-b1dfa79f4670, symbol='BTC', name='Bitcoin', isFiat=false}
+Currency{id=8de72370-09bf-41c8-b575-2d719ea2b1fe, symbol='ETH', name='Ethereum', isFiat=false}
