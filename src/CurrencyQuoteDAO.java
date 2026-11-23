@@ -20,7 +20,7 @@ public class CurrencyQuoteDAO {
         "JOIN tb_currency c ON q.currency_id = c.id " +
         "JOIN tb_currency b ON q.baseCurrency_id = b.id ";
 
-    public void inserir(CurrencyQuote quote) {
+    public boolean inserir(CurrencyQuote quote) {
         String sql = "INSERT INTO tb_currency_quote " +
                 "(id, currency_id, baseCurrency_id, price, quote_timestamp) " +
                 "VALUES (?, ?, ?, ?, ?)";
@@ -37,9 +37,11 @@ public class CurrencyQuoteDAO {
             stmt.executeUpdate();
             System.out.println("Cotação inserida com sucesso: " + quote.getCurrency().getSymbol()
                     + "/" + quote.getBaseCurrency().getSymbol());
+            return true;
 
         } catch (SQLException e) {
             System.out.println("Erro ao inserir cotação: " + e.getMessage());
+            return false;
         }
     }
 
@@ -128,7 +130,7 @@ public class CurrencyQuoteDAO {
         return null;
     }
 
-    public void atualizar(CurrencyQuote quote) {
+    public boolean atualizar(CurrencyQuote quote) {
         String sql = "UPDATE tb_currency_quote " +
                 "SET currency_id = ?, baseCurrency_id = ?, price = ?, quote_timestamp = ? " +
                 "WHERE id = ?";
@@ -148,13 +150,15 @@ public class CurrencyQuoteDAO {
             } else {
                 System.out.println("Nenhuma cotação encontrada com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar cotação: " + e.getMessage());
+            return false;
         }
     }
 
-    public void deletar(UUID id) {
+    public boolean deletar(UUID id) {
         String sql = "DELETE FROM tb_currency_quote WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -168,13 +172,17 @@ public class CurrencyQuoteDAO {
             } else {
                 System.out.println("Nenhuma cotação encontrada com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao deletar cotação: " + e.getMessage());
+            return false;
         }
     }
 
-    public void deletarPorMoeda(UUID currencyId) {
+    // Devolve quantas linhas foram apagadas, para o menu poder dizer ao usuário
+    // exatamente o que a exclusão em cascata levou junto.
+    public int deletarPorMoeda(UUID currencyId) {
         String sql = "DELETE FROM tb_currency_quote WHERE currency_id = ? OR baseCurrency_id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -182,10 +190,11 @@ public class CurrencyQuoteDAO {
 
             stmt.setString(1, currencyId.toString());
             stmt.setString(2, currencyId.toString());
-            stmt.executeUpdate();
+            return stmt.executeUpdate();
 
         } catch (SQLException e) {
             System.out.println("Erro ao deletar cotações da moeda: " + e.getMessage());
+            return 0;
         }
     }
 

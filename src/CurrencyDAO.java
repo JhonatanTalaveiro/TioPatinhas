@@ -12,7 +12,7 @@ public class CurrencyDAO {
         "SELECT id, symbol, name, isFiat FROM tb_currency ";
 
     // CREATE - insere uma nova moeda no banco
-    public void inserir(Currency currency) {
+    public boolean inserir(Currency currency) {
         String sql = "INSERT INTO tb_currency (id, symbol, name, isFiat) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -26,9 +26,11 @@ public class CurrencyDAO {
 
             stmt.executeUpdate();
             System.out.println("Moeda inserida com sucesso: " + currency.getSymbol());
+            return true;
 
         } catch (SQLException e) {
             System.out.println("Erro ao inserir moeda: " + e.getMessage());
+            return false;
         }
     }
 
@@ -121,7 +123,7 @@ public class CurrencyDAO {
     // UPDATE - atualiza os dados de uma moeda existente.
     // Os atributos de Currency são final (imutáveis), então o chamador monta um
     // novo objeto com o MESMO id e os valores já alterados.
-    public void atualizar(Currency currency) {
+    public boolean atualizar(Currency currency) {
         String sql = "UPDATE tb_currency SET symbol = ?, name = ?, isFiat = ? WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -138,16 +140,18 @@ public class CurrencyDAO {
             } else {
                 System.out.println("Nenhuma moeda encontrada com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar moeda: " + e.getMessage());
+            return false;
         }
     }
 
     // DELETE - remove uma moeda pelo id.
     // Só funciona se nenhuma carteira, ativo, transação ou cotação ainda apontar
     // para ela; caso contrário o Oracle devolve ORA-02292 (child record found).
-    public void deletar(UUID id) {
+    public boolean deletar(UUID id) {
         String sql = "DELETE FROM tb_currency WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -161,9 +165,11 @@ public class CurrencyDAO {
             } else {
                 System.out.println("Nenhuma moeda encontrada com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao deletar moeda: " + e.getMessage());
+            return false;
         }
     }
 

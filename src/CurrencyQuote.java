@@ -39,6 +39,10 @@ public class CurrencyQuote extends BaseEntity {
 
     public void setPrice(BigDecimal price) { this.price = price; }
 
+    public LocalDateTime getTimestamp() { return timestamp; }
+
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
     public String getFormattedPrice(){
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 

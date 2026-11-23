@@ -8,8 +8,11 @@ import java.util.UUID;
 
 public class UserDAO {
 
-    // CREATE - insere um novo usuário no banco
-    public void inserir(User user) {
+    // CREATE - insere um novo usuário no banco.
+    // Devolve true quando a linha foi gravada e false quando o Oracle recusou
+    // (e-mail repetido, tabela inexistente, ...). Os menus usam esse retorno
+    // para não anunciar "sucesso" logo depois de uma mensagem de erro.
+    public boolean inserir(User user) {
         String sql = "INSERT INTO tb_user (id, email, hashedPassword, name) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -22,9 +25,11 @@ public class UserDAO {
 
             stmt.executeUpdate();
             System.out.println("Usuário inserido com sucesso: " + user.getName());
+            return true;
 
         } catch (SQLException e) {
             System.out.println("Erro ao inserir usuário: " + e.getMessage());
+            return false;
         }
     }
 
@@ -51,6 +56,36 @@ public class UserDAO {
 
         } catch (SQLException e) {
             System.out.println("Erro ao buscar usuário: " + e.getMessage());
+        }
+
+        return user;
+    }
+
+    // READ - busca um usuário pelo e-mail, que é UNIQUE na tabela.
+    // É com este método que o menu descobre, ANTES de tentar gravar, que o
+    // e-mail já pertence a outra pessoa.
+    public User buscarPorEmail(String email) {
+        String sql = "SELECT id, email, hashedPassword, name FROM tb_user WHERE LOWER(email) = LOWER(?)";
+        User user = null;
+
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, email);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    user = new User(
+                            UUID.fromString(rs.getString("id")),
+                            rs.getString("email"),
+                            rs.getString("hashedPassword"),
+                            rs.getString("name")
+                    );
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Erro ao buscar usuário pelo e-mail: " + e.getMessage());
         }
 
         return user;
@@ -83,7 +118,7 @@ public class UserDAO {
     }
 
     // UPDATE - atualiza os dados de um usuário existente
-    public void atualizar(User user) {
+    public boolean atualizar(User user) {
         String sql = "UPDATE tb_user SET email = ?, hashedPassword = ?, name = ? WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -100,14 +135,16 @@ public class UserDAO {
             } else {
                 System.out.println("Nenhum usuário encontrado com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar usuário: " + e.getMessage());
+            return false;
         }
     }
 
     // DELETE - remove um usuário pelo id
-    public void deletar(UUID id) {
+    public boolean deletar(UUID id) {
         String sql = "DELETE FROM tb_user WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -121,9 +158,11 @@ public class UserDAO {
             } else {
                 System.out.println("Nenhum usuário encontrado com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao deletar usuário: " + e.getMessage());
+            return false;
         }
     }
 }

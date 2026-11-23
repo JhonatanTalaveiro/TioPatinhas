@@ -21,7 +21,7 @@ public class TransactionDAO {
         "FROM tb_transaction t " +
         "JOIN tb_currency c ON t.currency_id = c.id ";
 
-    public void inserir(Transaction t) {
+    public boolean inserir(Transaction t) {
         String sql = "INSERT INTO tb_transaction " +
                 "(id, wallet_id, currency_id, quantity, priceAtTime, TYPE, executedAt) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -39,9 +39,11 @@ public class TransactionDAO {
 
             stmt.executeUpdate();
             System.out.println("Transação inserida com sucesso: " + t.type + " " + t.currency.getSymbol());
+            return true;
 
         } catch (SQLException e) {
             System.out.println("Erro ao inserir transação: " + e.getMessage());
+            return false;
         }
     }
 
@@ -116,7 +118,7 @@ public class TransactionDAO {
         return transacoes;
     }
 
-    public void atualizar(Transaction t) {
+    public boolean atualizar(Transaction t) {
         String sql = "UPDATE tb_transaction " +
                 "SET currency_id = ?, quantity = ?, priceAtTime = ?, TYPE = ?, executedAt = ? " +
                 "WHERE id = ?";
@@ -137,13 +139,15 @@ public class TransactionDAO {
             } else {
                 System.out.println("Nenhuma transação encontrada com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar transação: " + e.getMessage());
+            return false;
         }
     }
 
-    public void deletar(UUID id) {
+    public boolean deletar(UUID id) {
         String sql = "DELETE FROM tb_transaction WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -157,23 +161,28 @@ public class TransactionDAO {
             } else {
                 System.out.println("Nenhuma transação encontrada com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao deletar transação: " + e.getMessage());
+            return false;
         }
     }
 
-    public void deletarPorCarteira(UUID walletId) {
+    // Devolve quantas linhas foram apagadas, para o menu poder dizer ao usuário
+    // exatamente o que a exclusão em cascata levou junto.
+    public int deletarPorCarteira(UUID walletId) {
         String sql = "DELETE FROM tb_transaction WHERE wallet_id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, walletId.toString());
-            stmt.executeUpdate();
+            return stmt.executeUpdate();
 
         } catch (SQLException e) {
             System.out.println("Erro ao deletar transações da carteira: " + e.getMessage());
+            return 0;
         }
     }
 
