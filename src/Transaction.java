@@ -37,6 +37,34 @@ public class Transaction extends BaseEntity {
         return (quantity.multiply(priceAtTime));
     }
 
+    // Getters e setters usados pelos menus (MenuTransacao) e pelo Formatador.
+    // Os atributos continuam com visibilidade de pacote por compatibilidade com
+    // o código das fases anteriores, que os acessa diretamente.
+
+    public Wallet getWallet() { return wallet; }
+
+    public void setWallet(Wallet wallet) { this.wallet = wallet; }
+
+    public Currency getCurrency() { return currency; }
+
+    public void setCurrency(Currency currency) { this.currency = currency; }
+
+    public BigDecimal getQuantity() { return quantity; }
+
+    public void setQuantity(BigDecimal quantity) { this.quantity = quantity; }
+
+    public BigDecimal getPriceAtTime() { return priceAtTime; }
+
+    public void setPriceAtTime(BigDecimal priceAtTime) { this.priceAtTime = priceAtTime; }
+
+    public TransactionType getType() { return type; }
+
+    public void setType(TransactionType type) { this.type = type; }
+
+    public LocalDateTime getExecutedAt() { return executedAt; }
+
+    public void setExecutedAt(LocalDateTime executedAt) { this.executedAt = executedAt; }
+
     @Override
     public String toString() {
         return "Transaction{id=" + id +

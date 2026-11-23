@@ -16,7 +16,7 @@ public class WalletDAO {
         "JOIN tb_user u ON w.owner_id = u.id " +
         "JOIN tb_currency c ON w.baseCurrency_id = c.id ";
 
-    public void inserir(Wallet wallet) {
+    public boolean inserir(Wallet wallet) {
         String sql = "INSERT INTO tb_wallet (id, owner_id, baseCurrency_id) VALUES (?, ?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -28,9 +28,11 @@ public class WalletDAO {
 
             stmt.executeUpdate();
             System.out.println("Carteira inserida com sucesso: " + wallet.getId());
+            return true;
 
         } catch (SQLException e) {
             System.out.println("Erro ao inserir carteira: " + e.getMessage());
+            return false;
         }
     }
 
@@ -95,7 +97,7 @@ public class WalletDAO {
         return carteiras;
     }
 
-    public void atualizar(Wallet wallet) {
+    public boolean atualizar(Wallet wallet) {
         String sql = "UPDATE tb_wallet SET owner_id = ?, baseCurrency_id = ? WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -111,13 +113,15 @@ public class WalletDAO {
             } else {
                 System.out.println("Nenhuma carteira encontrada com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar carteira: " + e.getMessage());
+            return false;
         }
     }
 
-    public void deletar(UUID id) {
+    public boolean deletar(UUID id) {
         String sql = "DELETE FROM tb_wallet WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -131,9 +135,11 @@ public class WalletDAO {
             } else {
                 System.out.println("Nenhuma carteira encontrada com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao deletar carteira: " + e.getMessage());
+            return false;
         }
     }
 

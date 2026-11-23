@@ -15,7 +15,7 @@ public class AssetDAO {
         "FROM tb_asset a " +
         "JOIN tb_currency c ON a.currency_id = c.id ";
 
-    public void inserir(Asset asset, UUID walletId) {
+    public boolean inserir(Asset asset, UUID walletId) {
         String sql = "INSERT INTO tb_asset (id, wallet_id, currency_id, quantity) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -28,9 +28,11 @@ public class AssetDAO {
 
             stmt.executeUpdate();
             System.out.println("Asset inserido com sucesso: " + asset.getCurrency().getSymbol());
+            return true;
 
         } catch (SQLException e) {
             System.out.println("Erro ao inserir asset: " + e.getMessage());
+            return false;
         }
     }
 
@@ -95,7 +97,7 @@ public class AssetDAO {
         return assets;
     }
 
-    public void atualizar(Asset asset) {
+    public boolean atualizar(Asset asset) {
         String sql = "UPDATE tb_asset SET currency_id = ?, quantity = ? WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -111,13 +113,15 @@ public class AssetDAO {
             } else {
                 System.out.println("Nenhum asset encontrado com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao atualizar asset: " + e.getMessage());
+            return false;
         }
     }
 
-    public void deletar(UUID id) {
+    public boolean deletar(UUID id) {
         String sql = "DELETE FROM tb_asset WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
@@ -131,23 +135,28 @@ public class AssetDAO {
             } else {
                 System.out.println("Nenhum asset encontrado com esse id.");
             }
+            return linhas > 0;
 
         } catch (SQLException e) {
             System.out.println("Erro ao deletar asset: " + e.getMessage());
+            return false;
         }
     }
 
-    public void deletarPorCarteira(UUID walletId) {
+    // Devolve quantas linhas foram apagadas, para o menu poder dizer ao usuário
+    // exatamente o que a exclusão em cascata levou junto.
+    public int deletarPorCarteira(UUID walletId) {
         String sql = "DELETE FROM tb_asset WHERE wallet_id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, walletId.toString());
-            stmt.executeUpdate();
+            return stmt.executeUpdate();
 
         } catch (SQLException e) {
             System.out.println("Erro ao deletar assets da carteira: " + e.getMessage());
+            return 0;
         }
     }
 
