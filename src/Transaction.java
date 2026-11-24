@@ -37,10 +37,6 @@ public class Transaction extends BaseEntity {
         return (quantity.multiply(priceAtTime));
     }
 
-    // Getters e setters usados pelos menus (MenuTransacao) e pelo Formatador.
-    // Os atributos continuam com visibilidade de pacote por compatibilidade com
-    // o código das fases anteriores, que os acessa diretamente.
-
     public Wallet getWallet() { return wallet; }
 
     public void setWallet(Wallet wallet) { this.wallet = wallet; }

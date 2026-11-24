@@ -8,10 +8,6 @@ import java.util.UUID;
 
 public class UserDAO {
 
-    // CREATE - insere um novo usuário no banco.
-    // Devolve true quando a linha foi gravada e false quando o Oracle recusou
-    // (e-mail repetido, tabela inexistente, ...). Os menus usam esse retorno
-    // para não anunciar "sucesso" logo depois de uma mensagem de erro.
     public boolean inserir(User user) {
         String sql = "INSERT INTO tb_user (id, email, hashedPassword, name) VALUES (?, ?, ?, ?)";
 
@@ -33,7 +29,6 @@ public class UserDAO {
         }
     }
 
-    // READ - busca um usuário pelo id
     public User buscarPorId(UUID id) {
         String sql = "SELECT id, email, hashedPassword, name FROM tb_user WHERE id = ?";
         User user = null;
@@ -61,9 +56,6 @@ public class UserDAO {
         return user;
     }
 
-    // READ - busca um usuário pelo e-mail, que é UNIQUE na tabela.
-    // É com este método que o menu descobre, ANTES de tentar gravar, que o
-    // e-mail já pertence a outra pessoa.
     public User buscarPorEmail(String email) {
         String sql = "SELECT id, email, hashedPassword, name FROM tb_user WHERE LOWER(email) = LOWER(?)";
         User user = null;
@@ -91,7 +83,6 @@ public class UserDAO {
         return user;
     }
 
-    // READ - lista todos os usuários
     public List<User> listarTodos() {
         String sql = "SELECT id, email, hashedPassword, name FROM tb_user";
         List<User> usuarios = new ArrayList<>();
@@ -117,7 +108,6 @@ public class UserDAO {
         return usuarios;
     }
 
-    // UPDATE - atualiza os dados de um usuário existente
     public boolean atualizar(User user) {
         String sql = "UPDATE tb_user SET email = ?, hashedPassword = ?, name = ? WHERE id = ?";
 
@@ -143,7 +133,6 @@ public class UserDAO {
         }
     }
 
-    // DELETE - remove um usuário pelo id
     public boolean deletar(UUID id) {
         String sql = "DELETE FROM tb_user WHERE id = ?";
 

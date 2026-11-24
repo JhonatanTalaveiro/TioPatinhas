@@ -180,8 +180,6 @@ public class CurrencyQuoteDAO {
         }
     }
 
-    // Devolve quantas linhas foram apagadas, para o menu poder dizer ao usuário
-    // exatamente o que a exclusão em cascata levou junto.
     public int deletarPorMoeda(UUID currencyId) {
         String sql = "DELETE FROM tb_currency_quote WHERE currency_id = ? OR baseCurrency_id = ?";
 

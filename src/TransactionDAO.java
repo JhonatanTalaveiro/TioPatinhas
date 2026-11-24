@@ -169,8 +169,6 @@ public class TransactionDAO {
         }
     }
 
-    // Devolve quantas linhas foram apagadas, para o menu poder dizer ao usuário
-    // exatamente o que a exclusão em cascata levou junto.
     public int deletarPorCarteira(UUID walletId) {
         String sql = "DELETE FROM tb_transaction WHERE wallet_id = ?";
 

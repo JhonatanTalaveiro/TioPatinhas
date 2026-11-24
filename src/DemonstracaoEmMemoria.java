@@ -3,17 +3,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/**
- * DEMONSTRAÇÃO EM MEMÓRIA (Fase 5)
- * -----------------------------------------------------------------------------
- * Usa só objetos Java e Collections (ArrayList e HashMap), sem tocar no banco,
- * e no final grava três arquivos de texto na pasta do projeto: usuarios.txt,
- * moedas.txt e carteiras.txt.
- *
- * Este código ficava dentro da Main. Quando a Main virou o programa com menus,
- * ele foi movido para cá e continua acessível pelo menu Utilitários - assim a
- * entrega da Fase 5 não se perde.
- */
 public final class DemonstracaoEmMemoria {
 
     private DemonstracaoEmMemoria() {
@@ -21,7 +10,6 @@ public final class DemonstracaoEmMemoria {
 
     public static void executar() {
         try {
-            // Usuários
             User user1 = new User("user1@gmail.com", "1234", "user1");
             User user2 = new User("user2@gmail.com", "1234", "user2");
 
@@ -31,7 +19,6 @@ public final class DemonstracaoEmMemoria {
 
             System.out.println("Users: " + users);
 
-            // Moedas
             ArrayList<Currency> supportedCurrencies = new ArrayList<>();
 
             Currency BRL = new Currency("BRL", "Real Brasileiro", true);
@@ -57,7 +44,6 @@ public final class DemonstracaoEmMemoria {
                 currenciesByCode.put(c.getSymbol(), c);
             }
 
-            // Carteiras
             HashMap<User, ArrayList<Wallet>> walletsByUser = new HashMap<>();
 
             ArrayList<Wallet> user1Wallets = new ArrayList<>();
@@ -70,7 +56,6 @@ public final class DemonstracaoEmMemoria {
             user2Wallets.add(new Wallet(user2, USD));
             walletsByUser.put(user2, user2Wallets);
 
-            // Operações
             System.out.println("User 1:");
             System.out.println(user1);
 
@@ -103,7 +88,6 @@ public final class DemonstracaoEmMemoria {
             System.out.println("BRL: " + walletsByUser.get(user2).get(1).getBalance(BRL));
             System.out.println("ETH: " + walletsByUser.get(user2).get(1).getBalance("ETH"));
 
-            // Criar / atualizar arquivo de usuários
             FileWriter writerUsers = new FileWriter("usuarios.txt");
 
             for (User user : users) {
@@ -112,7 +96,6 @@ public final class DemonstracaoEmMemoria {
 
             writerUsers.close();
 
-            // Criar / atualizar arquivo de moedas
             FileWriter writerCurrencies = new FileWriter("moedas.txt");
 
             for (Currency currency : supportedCurrencies) {
@@ -121,7 +104,6 @@ public final class DemonstracaoEmMemoria {
 
             writerCurrencies.close();
 
-            // Criar / atualizar arquivo de carteiras por usuário
             FileWriter writerWallets = new FileWriter("carteiras.txt");
 
             for (User user : walletsByUser.keySet()) {

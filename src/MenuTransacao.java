@@ -5,13 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Submenu do módulo de transações (tabela tb_transaction).
- *
- * Cada transação é uma movimentação da carteira: compra, venda, depósito ou
- * saque. O tipo vem do enum TransactionType, que é exatamente a lista aceita
- * pela constraint ck_transaction_type do banco.
- */
 public final class MenuTransacao {
 
     private static final TransactionDAO transactionDAO = new TransactionDAO();
@@ -56,9 +49,6 @@ public final class MenuTransacao {
         } while (opcao != 0);
     }
 
-    // -------------------------------------------------------------------------
-    //  1 - Inclusão
-    // -------------------------------------------------------------------------
     private static void incluir() {
         Formatador.subtitulo("Inclusão de transação");
 
@@ -103,9 +93,6 @@ public final class MenuTransacao {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  2 - Alteração
-    // -------------------------------------------------------------------------
     private static void alterar() {
         Formatador.subtitulo("Alteração de transação");
 
@@ -147,9 +134,6 @@ public final class MenuTransacao {
         transactionDAO.atualizar(transacao);
     }
 
-    // -------------------------------------------------------------------------
-    //  3 - Exclusão
-    // -------------------------------------------------------------------------
     private static void excluir() {
         Formatador.subtitulo("Exclusão de transação");
 
@@ -175,9 +159,6 @@ public final class MenuTransacao {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  4 - Exibição de todas
-    // -------------------------------------------------------------------------
     private static void exibirTodas() {
         Formatador.subtitulo("Transações cadastradas");
 
@@ -197,9 +178,6 @@ public final class MenuTransacao {
         System.out.println("Total: " + transacoes.size() + " transação(ões).");
     }
 
-    // -------------------------------------------------------------------------
-    //  5 - Exibição de uma única
-    // -------------------------------------------------------------------------
     private static void exibirUma() {
         Formatador.subtitulo("Consulta de uma transação");
 
@@ -224,9 +202,6 @@ public final class MenuTransacao {
         System.out.println(Formatador.detalhesTransacao(transacao));
     }
 
-    // -------------------------------------------------------------------------
-    //  6 - Opção extra: extrato de uma carteira
-    // -------------------------------------------------------------------------
     private static void exibirPorCarteira() {
         Formatador.subtitulo("Transações de uma carteira");
 
@@ -253,9 +228,6 @@ public final class MenuTransacao {
         System.out.println("Total: " + transacoes.size() + " transação(ões).");
     }
 
-    // -------------------------------------------------------------------------
-    //  7 - Opção extra: resumo por tipo
-    // -------------------------------------------------------------------------
     private static void resumoPorTipo() {
         Formatador.subtitulo("Resumo por tipo de transação");
 
@@ -266,8 +238,6 @@ public final class MenuTransacao {
             return;
         }
 
-        // Agrupamento feito com Collections, em memória: é o equivalente em
-        // Java do GROUP BY do SQL. LinkedHashMap mantém a ordem de inserção.
         Map<TransactionType, Integer> quantidadePorTipo = new LinkedHashMap<>();
         Map<TransactionType, BigDecimal> totalPorTipo = new LinkedHashMap<>();
 
@@ -292,10 +262,6 @@ public final class MenuTransacao {
         System.out.println("Observação: os valores somados misturam moedas base diferentes,");
         System.out.println("então servem como volume de operações, não como total financeiro.");
     }
-
-    // -------------------------------------------------------------------------
-    //  Apoio
-    // -------------------------------------------------------------------------
 
     private static TransactionType lerTipo() {
         System.out.println("Tipos disponíveis:");

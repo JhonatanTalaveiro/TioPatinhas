@@ -3,13 +3,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Submenu do módulo de cotações (tabela tb_currency_quote).
- *
- * Uma cotação diz quanto vale 1 unidade de uma moeda em outra, em um instante:
- * "em 09/11/2026, 1 BTC = 615000 BRL". É com essas linhas que o programa
- * converte os ativos para a moeda base e calcula o patrimônio da carteira.
- */
 public final class MenuCotacao {
 
     private static final CurrencyQuoteDAO quoteDAO = new CurrencyQuoteDAO();
@@ -53,9 +46,6 @@ public final class MenuCotacao {
         } while (opcao != 0);
     }
 
-    // -------------------------------------------------------------------------
-    //  1 - Inclusão
-    // -------------------------------------------------------------------------
     private static void incluir() {
         Formatador.subtitulo("Inclusão de cotação");
 
@@ -71,7 +61,6 @@ public final class MenuCotacao {
             return;
         }
 
-        // Validação: cotar uma moeda nela mesma não significa nada (1 BRL = 1 BRL).
         if (moeda.getId().equals(base.getId())) {
             System.out.println("A moeda cotada e a moeda base precisam ser diferentes.");
             return;
@@ -89,9 +78,6 @@ public final class MenuCotacao {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  2 - Alteração
-    // -------------------------------------------------------------------------
     private static void alterar() {
         Formatador.subtitulo("Alteração de cotação");
 
@@ -128,9 +114,6 @@ public final class MenuCotacao {
         quoteDAO.atualizar(cotacao);
     }
 
-    // -------------------------------------------------------------------------
-    //  3 - Exclusão
-    // -------------------------------------------------------------------------
     private static void excluir() {
         Formatador.subtitulo("Exclusão de cotação");
 
@@ -152,9 +135,6 @@ public final class MenuCotacao {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  4 - Exibição de todas
-    // -------------------------------------------------------------------------
     private static void exibirTodas() {
         Formatador.subtitulo("Cotações cadastradas");
 
@@ -173,9 +153,6 @@ public final class MenuCotacao {
         System.out.println("Total: " + cotacoes.size() + " cotação(ões).");
     }
 
-    // -------------------------------------------------------------------------
-    //  5 - Exibição de uma única
-    // -------------------------------------------------------------------------
     private static void exibirUma() {
         Formatador.subtitulo("Consulta de uma cotação");
 
@@ -195,9 +172,6 @@ public final class MenuCotacao {
         System.out.println(Formatador.detalhesCotacao(cotacao));
     }
 
-    // -------------------------------------------------------------------------
-    //  6 - Opção extra: cotação mais recente de um par
-    // -------------------------------------------------------------------------
     private static void exibirMaisRecente() {
         Formatador.subtitulo("Cotação mais recente de um par");
 
@@ -213,8 +187,6 @@ public final class MenuCotacao {
             return;
         }
 
-        // Este método do DAO usa ORDER BY ... DESC com ROWNUM = 1, que é o jeito
-        // do Oracle de pedir "só a primeira linha" do resultado ordenado.
         CurrencyQuote cotacao = quoteDAO.buscarMaisRecente(moeda.getId(), base.getId());
 
         if (cotacao == null) {
@@ -227,9 +199,6 @@ public final class MenuCotacao {
         System.out.println(Formatador.detalhesCotacao(cotacao));
     }
 
-    // -------------------------------------------------------------------------
-    //  7 - Opção extra: histórico de uma moeda
-    // -------------------------------------------------------------------------
     private static void exibirHistoricoDaMoeda() {
         Formatador.subtitulo("Histórico de cotações de uma moeda");
 

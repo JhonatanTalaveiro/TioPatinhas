@@ -1,11 +1,5 @@
 import java.util.List;
 
-/**
- * Submenu do módulo de usuários (tabela tb_user).
- *
- * Todas as operações vão direto ao banco pelo UserDAO: o que aparece na tela é
- * sempre o que está gravado no Oracle, não uma cópia em memória.
- */
 public final class MenuUsuario {
 
     private static final UserDAO userDAO = new UserDAO();
@@ -47,17 +41,12 @@ public final class MenuUsuario {
         } while (opcao != 0);
     }
 
-    // -------------------------------------------------------------------------
-    //  1 - Inclusão
-    // -------------------------------------------------------------------------
     private static void incluir() {
         Formatador.subtitulo("Inclusão de usuário");
 
         String nome = Entrada.lerTextoObrigatorio("Nome completo", Validador.TAMANHO_MAXIMO_TEXTO);
         String email = Entrada.lerEmail("E-mail");
 
-        // A coluna email é UNIQUE no banco. Conferir antes de gravar troca o
-        // ORA-00001 (unique constraint violated) por um aviso em português.
         if (userDAO.buscarPorEmail(email) != null) {
             System.out.println("Já existe um usuário cadastrado com o e-mail " + email + ".");
             return;
@@ -65,7 +54,6 @@ public final class MenuUsuario {
 
         String senha = Entrada.lerSenha("Senha (mínimo " + Validador.TAMANHO_MINIMO_SENHA + " caracteres)");
 
-        // O que vai para o banco é o hash, nunca a senha digitada.
         User usuario = new User(email, Seguranca.gerarHashSha256(senha), nome);
 
         if (userDAO.inserir(usuario)) {
@@ -73,9 +61,6 @@ public final class MenuUsuario {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  2 - Alteração
-    // -------------------------------------------------------------------------
     private static void alterar() {
         Formatador.subtitulo("Alteração de usuário");
 
@@ -93,8 +78,6 @@ public final class MenuUsuario {
         String nome = Entrada.lerTextoOpcional("Nome", usuario.getName(), Validador.TAMANHO_MAXIMO_TEXTO);
         String email = Entrada.lerEmail("E-mail", usuario.getEmail());
 
-        // Só vale conferir duplicidade se o e-mail realmente mudou; e o novo
-        // e-mail não pode pertencer a OUTRO usuário.
         if (!email.equalsIgnoreCase(usuario.getEmail())) {
             User dono = userDAO.buscarPorEmail(email);
             if (dono != null && !dono.getId().equals(usuario.getId())) {
@@ -115,9 +98,6 @@ public final class MenuUsuario {
         userDAO.atualizar(usuario);
     }
 
-    // -------------------------------------------------------------------------
-    //  3 - Exclusão
-    // -------------------------------------------------------------------------
     private static void excluir() {
         Formatador.subtitulo("Exclusão de usuário");
 
@@ -126,9 +106,6 @@ public final class MenuUsuario {
             return;
         }
 
-        // tb_wallet tem chave estrangeira para tb_user: apagar um usuário que
-        // ainda tem carteira daria ORA-02292 (child record found). Em vez de
-        // deixar o erro acontecer, o programa explica o que falta fazer antes.
         List<Wallet> carteiras = walletDAO.listarPorUsuario(usuario.getId());
         if (!carteiras.isEmpty()) {
             System.out.println();
@@ -152,9 +129,6 @@ public final class MenuUsuario {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  4 - Exibição de todos
-    // -------------------------------------------------------------------------
     private static void exibirTodos() {
         Formatador.subtitulo("Usuários cadastrados");
 
@@ -173,9 +147,6 @@ public final class MenuUsuario {
         System.out.println("Total: " + usuarios.size() + " usuário(s).");
     }
 
-    // -------------------------------------------------------------------------
-    //  5 - Exibição de um único registro
-    // -------------------------------------------------------------------------
     private static void exibirUm() {
         Formatador.subtitulo("Consulta de um usuário");
 
@@ -184,7 +155,6 @@ public final class MenuUsuario {
             return;
         }
 
-        // Relê pelo id para mostrar exatamente o que está gravado agora.
         User usuario = userDAO.buscarPorId(escolhido.getId());
 
         if (usuario == null) {
@@ -196,9 +166,6 @@ public final class MenuUsuario {
         System.out.println(Formatador.detalhesUsuario(usuario));
     }
 
-    // -------------------------------------------------------------------------
-    //  6 - Opção extra: carteiras do usuário
-    // -------------------------------------------------------------------------
     private static void exibirCarteirasDoUsuario() {
         Formatador.subtitulo("Carteiras de um usuário");
 
@@ -225,7 +192,6 @@ public final class MenuUsuario {
         System.out.println("Total: " + carteiras.size() + " carteira(s).");
     }
 
-    /** Lista os usuários do banco e devolve o escolhido (ou null se cancelar). */
     private static User selecionar(String titulo) {
         return Seletor.escolher(userDAO.listarTodos(), titulo, Formatador::resumoUsuario);
     }

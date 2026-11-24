@@ -1,13 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Submenu do módulo de moedas (tabela tb_currency).
- *
- * tb_currency é a tabela "pai" de quase todas as outras: carteira, ativo,
- * transação e cotação apontam para ela. Por isso a exclusão aqui é a que mais
- * precisa de validação.
- */
 public final class MenuMoeda {
 
     private static final CurrencyDAO currencyDAO = new CurrencyDAO();
@@ -54,15 +47,11 @@ public final class MenuMoeda {
         } while (opcao != 0);
     }
 
-    // -------------------------------------------------------------------------
-    //  1 - Inclusão
-    // -------------------------------------------------------------------------
     private static void incluir() {
         Formatador.subtitulo("Inclusão de moeda");
 
         String simbolo = Entrada.lerSimbolo("Símbolo (ex.: BRL, BTC)");
 
-        // A coluna symbol é UNIQUE no banco.
         if (currencyDAO.buscarPorSimbolo(simbolo) != null) {
             System.out.println("Já existe uma moeda cadastrada com o símbolo " + simbolo + ".");
             return;
@@ -78,9 +67,6 @@ public final class MenuMoeda {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  2 - Alteração
-    // -------------------------------------------------------------------------
     private static void alterar() {
         Formatador.subtitulo("Alteração de moeda");
 
@@ -111,16 +97,11 @@ public final class MenuMoeda {
                 ? !moeda.isFiat()
                 : moeda.isFiat();
 
-        // Os atributos de Currency são final (a classe é imutável), então a
-        // alteração monta um objeto novo com o MESMO id e os valores corrigidos.
         Currency alterada = new Currency(moeda.getId(), simbolo, nome, fiduciaria);
 
         currencyDAO.atualizar(alterada);
     }
 
-    // -------------------------------------------------------------------------
-    //  3 - Exclusão
-    // -------------------------------------------------------------------------
     private static void excluir() {
         Formatador.subtitulo("Exclusão de moeda");
 
@@ -153,9 +134,6 @@ public final class MenuMoeda {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  4 - Exibição de todas
-    // -------------------------------------------------------------------------
     private static void exibirTodas() {
         Formatador.subtitulo("Moedas cadastradas");
 
@@ -174,9 +152,6 @@ public final class MenuMoeda {
         System.out.println("Total: " + moedas.size() + " moeda(s).");
     }
 
-    // -------------------------------------------------------------------------
-    //  5 - Exibição de uma única
-    // -------------------------------------------------------------------------
     private static void exibirUma() {
         Formatador.subtitulo("Consulta de uma moeda");
 
@@ -195,7 +170,6 @@ public final class MenuMoeda {
         System.out.println();
         System.out.println(Formatador.detalhesMoeda(moeda));
 
-        // Complemento útil: a última cotação conhecida desta moeda.
         List<CurrencyQuote> cotacoes = quoteDAO.listarPorMoeda(moeda.getId());
         if (cotacoes.isEmpty()) {
             System.out.println("  Cotações   : nenhuma cadastrada");
@@ -206,9 +180,6 @@ public final class MenuMoeda {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  6 - Opção extra: filtro por tipo
-    // -------------------------------------------------------------------------
     private static void exibirPorTipo() {
         Formatador.subtitulo("Moedas por tipo");
 
@@ -228,9 +199,6 @@ public final class MenuMoeda {
         System.out.println("Total: " + moedas.size() + " moeda(s).");
     }
 
-    // -------------------------------------------------------------------------
-    //  7 - Opção extra: busca pelo símbolo
-    // -------------------------------------------------------------------------
     private static void buscarPorSimbolo() {
         Formatador.subtitulo("Busca pelo símbolo");
 
@@ -246,18 +214,6 @@ public final class MenuMoeda {
         System.out.println(Formatador.detalhesMoeda(moeda));
     }
 
-    // -------------------------------------------------------------------------
-    //  Apoio
-    // -------------------------------------------------------------------------
-
-    /**
-     * Procura registros que impedem a exclusão da moeda.
-     *
-     * As consultas trazem as tabelas inteiras e o filtro é feito aqui, em
-     * Collections. Para o volume deste trabalho isso é suficiente e deixa a
-     * regra visível em um lugar só; em um sistema grande o certo seria um
-     * SELECT COUNT(*) por tabela.
-     */
     private static List<String> procurarVinculos(Currency moeda) {
         List<String> vinculos = new ArrayList<>();
 

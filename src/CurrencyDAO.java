@@ -11,7 +11,6 @@ public class CurrencyDAO {
     private static final String SELECT_BASE =
         "SELECT id, symbol, name, isFiat FROM tb_currency ";
 
-    // CREATE - insere uma nova moeda no banco
     public boolean inserir(Currency currency) {
         String sql = "INSERT INTO tb_currency (id, symbol, name, isFiat) VALUES (?, ?, ?, ?)";
 
@@ -21,7 +20,6 @@ public class CurrencyDAO {
             stmt.setString(1, currency.getId().toString());
             stmt.setString(2, currency.getSymbol());
             stmt.setString(3, currency.getName());
-            // O Oracle não tem BOOLEAN em coluna: o DDL usa NUMBER(1) com CHECK (isFiat IN (0, 1)).
             stmt.setInt(4, currency.isFiat() ? 1 : 0);
 
             stmt.executeUpdate();
@@ -34,7 +32,6 @@ public class CurrencyDAO {
         }
     }
 
-    // READ - busca uma moeda pelo id
     public Currency buscarPorId(UUID id) {
         String sql = SELECT_BASE + "WHERE id = ?";
 
@@ -56,7 +53,6 @@ public class CurrencyDAO {
         return null;
     }
 
-    // READ - busca uma moeda pelo símbolo (BRL, BTC, ...), que é UNIQUE na tabela
     public Currency buscarPorSimbolo(String symbol) {
         String sql = SELECT_BASE + "WHERE symbol = ?";
 
@@ -78,7 +74,6 @@ public class CurrencyDAO {
         return null;
     }
 
-    // READ - lista todas as moedas
     public List<Currency> listarTodos() {
         List<Currency> moedas = new ArrayList<>();
 
@@ -97,7 +92,6 @@ public class CurrencyDAO {
         return moedas;
     }
 
-    // READ - lista só as fiduciárias (isFiat = 1) ou só as criptomoedas (isFiat = 0)
     public List<Currency> listarPorTipo(boolean isFiat) {
         String sql = SELECT_BASE + "WHERE isFiat = ? ORDER BY symbol";
         List<Currency> moedas = new ArrayList<>();
@@ -120,9 +114,6 @@ public class CurrencyDAO {
         return moedas;
     }
 
-    // UPDATE - atualiza os dados de uma moeda existente.
-    // Os atributos de Currency são final (imutáveis), então o chamador monta um
-    // novo objeto com o MESMO id e os valores já alterados.
     public boolean atualizar(Currency currency) {
         String sql = "UPDATE tb_currency SET symbol = ?, name = ?, isFiat = ? WHERE id = ?";
 
@@ -148,9 +139,6 @@ public class CurrencyDAO {
         }
     }
 
-    // DELETE - remove uma moeda pelo id.
-    // Só funciona se nenhuma carteira, ativo, transação ou cotação ainda apontar
-    // para ela; caso contrário o Oracle devolve ORA-02292 (child record found).
     public boolean deletar(UUID id) {
         String sql = "DELETE FROM tb_currency WHERE id = ?";
 

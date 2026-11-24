@@ -6,34 +6,16 @@ import java.time.format.ResolverStyle;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-/**
- * Centraliza TODA a leitura do teclado do programa.
- *
- * A ideia é que nenhum menu precise mexer com Scanner nem repetir try/catch de
- * conversão: cada método daqui só devolve o valor depois que ele passou pelas
- * validações de formato (número, e-mail, data, valor positivo, ...). Enquanto o
- * usuário digitar algo inválido, o método explica o erro e pergunta de novo.
- *
- * Os métodos com o parâmetro "valorAtual" são usados nas telas de ALTERAÇÃO:
- * ali o ENTER em branco significa "não quero mudar este campo".
- */
 public final class Entrada {
 
-    // Um único Scanner para o programa inteiro. Criar vários Scanner sobre o
-    // System.in faz um roubar o buffer do outro. E nunca fechamos este aqui:
-    // fechar o Scanner fecha o System.in, e as leituras seguintes quebrariam.
     private static final Scanner SCANNER = new Scanner(System.in);
 
-    // ResolverStyle.STRICT recusa datas que não existem. Sem ele, o padrão
-    // (SMART) aceitaria 31/02/2026 e gravaria 28/02/2026 sem avisar ninguém.
-    // No modo STRICT o ano precisa ser "uuuu" em vez de "yyyy".
     public static final DateTimeFormatter FORMATO_DATA_HORA =
             DateTimeFormatter.ofPattern("dd/MM/uuuu HH:mm").withResolverStyle(ResolverStyle.STRICT);
 
     private Entrada() {
     }
 
-    /** Lê uma linha crua do teclado, já sem os espaços das pontas. */
     public static String lerLinha(String prompt) {
         System.out.print(prompt);
 
@@ -41,9 +23,6 @@ public final class Entrada {
             String linha = SCANNER.nextLine();
             return linha == null ? "" : linha.trim();
         } catch (NoSuchElementException e) {
-            // Acontece quando a entrada acaba (Ctrl+Z / Ctrl+D, ou execução com
-            // arquivo redirecionado). Sem este tratamento o menu entraria em
-            // laço infinito pedindo uma opção que nunca vai chegar.
             System.out.println();
             System.out.println("Entrada encerrada. Finalizando o programa.");
             System.exit(0);
@@ -51,7 +30,6 @@ public final class Entrada {
         }
     }
 
-    /** Número inteiro dentro de uma faixa fechada. */
     public static int lerInteiro(String rotulo, int minimo, int maximo) {
         while (true) {
             String texto = lerLinha(rotulo + ": ");
@@ -73,7 +51,6 @@ public final class Entrada {
         }
     }
 
-    /** Texto que não pode ficar em branco nem estourar o tamanho da coluna. */
     public static String lerTextoObrigatorio(String rotulo, int tamanhoMaximo) {
         while (true) {
             String texto = lerLinha(rotulo + ": ");
@@ -88,7 +65,6 @@ public final class Entrada {
         }
     }
 
-    /** Igual ao anterior, mas o ENTER em branco mantém o valor já gravado. */
     public static String lerTextoOpcional(String rotulo, String valorAtual, int tamanhoMaximo) {
         while (true) {
             String texto = lerLinha(rotulo + " [" + valorAtual + "]: ");
@@ -132,7 +108,6 @@ public final class Entrada {
         }
     }
 
-    /** Símbolo de moeda: até 10 caracteres, só letras e números, em maiúsculas. */
     public static String lerSimbolo(String rotulo) {
         while (true) {
             String simbolo = lerLinha(rotulo + ": ").toUpperCase();
@@ -162,11 +137,6 @@ public final class Entrada {
         }
     }
 
-    /**
-     * Senha em texto puro, só para gerar o hash em seguida. O programa nunca
-     * guarda o que foi digitado aqui: quem vai para o banco é o resultado de
-     * Seguranca.gerarHashSha256().
-     */
     public static String lerSenha(String rotulo) {
         while (true) {
             String senha = lerLinha(rotulo + ": ");
@@ -180,10 +150,6 @@ public final class Entrada {
         }
     }
 
-    /**
-     * Valor numérico já validado contra a coluna NUMBER(18,8) do Oracle.
-     * Aceita vírgula ou ponto como separador decimal.
-     */
     public static BigDecimal lerDecimal(String rotulo, boolean permiteZero) {
         while (true) {
             String texto = lerLinha(rotulo + ": ").replace(",", ".");
@@ -210,11 +176,6 @@ public final class Entrada {
         }
     }
 
-    /**
-     * Data/hora no formato dd/mm/aaaa hh:mm. ENTER em branco usa o valor padrão
-     * (normalmente "agora"). Datas no futuro são recusadas: nenhuma transação
-     * ou cotação pode ter acontecido amanhã.
-     */
     public static LocalDateTime lerDataHora(String rotulo, LocalDateTime valorPadrao) {
         LocalDateTime padrao = valorPadrao.withSecond(0).withNano(0);
 
@@ -261,8 +222,6 @@ public final class Entrada {
         lerLinha("\nPressione ENTER para continuar...");
     }
 
-    // Converte e valida o texto digitado. Devolve null (e já explica o erro na
-    // tela) quando o valor não serve, para quem chamou perguntar de novo.
     private static BigDecimal converter(String texto, boolean permiteZero) {
         try {
             BigDecimal valor = new BigDecimal(texto).stripTrailingZeros();

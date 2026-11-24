@@ -1,13 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Submenu do módulo de carteiras (tabela tb_wallet).
- *
- * Uma carteira pertence a um usuário e tem uma moeda base, que é a moeda em que
- * o patrimônio dela é medido. Como tb_asset e tb_transaction apontam para a
- * carteira, a exclusão oferece apagar junto tudo que está vinculado.
- */
 public final class MenuCarteira {
 
     private static final WalletDAO walletDAO = new WalletDAO();
@@ -55,15 +48,9 @@ public final class MenuCarteira {
         } while (opcao != 0);
     }
 
-    // -------------------------------------------------------------------------
-    //  1 - Inclusão
-    // -------------------------------------------------------------------------
     private static void incluir() {
         Formatador.subtitulo("Inclusão de carteira");
 
-        // Validação de chave estrangeira: o dono e a moeda base precisam existir
-        // no banco ANTES da carteira. Por isso os dois são escolhidos em listas
-        // lidas do próprio banco, e não digitados.
         User dono = Seletor.escolher(userDAO.listarTodos(),
                 "Escolha o dono da carteira:", Formatador::resumoUsuario);
         if (dono == null) {
@@ -76,8 +63,6 @@ public final class MenuCarteira {
             return;
         }
 
-        // Regra de negócio: não faz sentido o mesmo usuário ter duas carteiras
-        // na mesma moeda base.
         for (Wallet existente : walletDAO.listarPorUsuario(dono.getId())) {
             if (existente.getBaseCurrency().getId().equals(moedaBase.getId())) {
                 System.out.println(dono.getName() + " já tem uma carteira com base em "
@@ -93,9 +78,6 @@ public final class MenuCarteira {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  2 - Alteração
-    // -------------------------------------------------------------------------
     private static void alterar() {
         Formatador.subtitulo("Alteração de carteira");
 
@@ -124,8 +106,6 @@ public final class MenuCarteira {
             }
         }
 
-        // Confere de novo a regra "um dono não repete moeda base", porque o dono
-        // ou a moeda podem ter mudado agora.
         for (Wallet existente : walletDAO.listarPorUsuario(carteira.getOwner().getId())) {
             if (!existente.getId().equals(carteira.getId())
                     && existente.getBaseCurrency().getId().equals(carteira.getBaseCurrency().getId())) {
@@ -138,9 +118,6 @@ public final class MenuCarteira {
         walletDAO.atualizar(carteira);
     }
 
-    // -------------------------------------------------------------------------
-    //  3 - Exclusão
-    // -------------------------------------------------------------------------
     private static void excluir() {
         Formatador.subtitulo("Exclusão de carteira");
 
@@ -157,9 +134,6 @@ public final class MenuCarteira {
         System.out.println("  Ativos vinculados     : " + ativos.size());
         System.out.println("  Transações vinculadas : " + transacoes.size());
 
-        // tb_asset e tb_transaction têm FK para tb_wallet: enquanto existirem
-        // filhos, o DELETE da carteira falha com ORA-02292. Aqui o usuário
-        // decide se quer mesmo levar tudo junto.
         if (!ativos.isEmpty() || !transacoes.isEmpty()) {
             System.out.println();
             System.out.println("Esta carteira tem registros vinculados. Para excluí-la, eles");
@@ -184,9 +158,6 @@ public final class MenuCarteira {
         walletDAO.deletar(carteira.getId());
     }
 
-    // -------------------------------------------------------------------------
-    //  4 - Exibição de todas
-    // -------------------------------------------------------------------------
     private static void exibirTodas() {
         Formatador.subtitulo("Carteiras cadastradas");
 
@@ -205,9 +176,6 @@ public final class MenuCarteira {
         System.out.println("Total: " + carteiras.size() + " carteira(s).");
     }
 
-    // -------------------------------------------------------------------------
-    //  5 - Exibição de uma única
-    // -------------------------------------------------------------------------
     private static void exibirUma() {
         Formatador.subtitulo("Consulta de uma carteira");
 
@@ -229,9 +197,6 @@ public final class MenuCarteira {
         System.out.println("  Transações : " + transactionDAO.listarPorCarteira(carteira).size());
     }
 
-    // -------------------------------------------------------------------------
-    //  6 - Opção extra: carteiras de um usuário
-    // -------------------------------------------------------------------------
     private static void exibirPorUsuario() {
         Formatador.subtitulo("Carteiras de um usuário");
 
@@ -256,9 +221,6 @@ public final class MenuCarteira {
         }
     }
 
-    // -------------------------------------------------------------------------
-    //  7 - Opção extra: extrato e patrimônio
-    // -------------------------------------------------------------------------
     private static void exibirExtrato() {
         Formatador.subtitulo("Extrato e patrimônio");
 
@@ -272,7 +234,6 @@ public final class MenuCarteira {
         System.out.println();
         System.out.println(Formatador.detalhesCarteira(carteira));
 
-        // Saldos
         List<Asset> ativos = assetDAO.listarPorCarteira(carteira.getId());
         System.out.println();
         System.out.println("Saldos:");
@@ -284,7 +245,6 @@ public final class MenuCarteira {
             }
         }
 
-        // Movimentações
         List<Transaction> transacoes = transactionDAO.listarPorCarteira(carteira);
         System.out.println();
         System.out.println("Movimentações:");
@@ -296,8 +256,6 @@ public final class MenuCarteira {
             }
         }
 
-        // Patrimônio: usa o método Wallet.getTotalValue(), que converte cada
-        // ativo para a moeda base usando a cotação mais recente do par.
         List<CurrencyQuote> cotacoes = new ArrayList<>();
         List<String> semCotacao = new ArrayList<>();
 
@@ -305,7 +263,7 @@ public final class MenuCarteira {
             carteira.appendAsset(ativo);
 
             if (ativo.getCurrency().getId().equals(base.getId())) {
-                continue;  // o ativo já está na moeda base, não precisa converter
+                continue;
             }
 
             CurrencyQuote cotacao = quoteDAO.buscarMaisRecente(ativo.getCurrency().getId(), base.getId());

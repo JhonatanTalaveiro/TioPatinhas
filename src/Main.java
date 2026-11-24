@@ -1,28 +1,11 @@
 import java.sql.Connection;
 import java.sql.SQLException;
 
-/**
- * VOLTZ - MISSÃO TIO PATINHAS
- * =============================================================================
- *  Programa principal: menu de texto que dá acesso a todos os módulos do
- *  sistema. Cada módulo tem o seu próprio submenu com Inclusão, Alteração,
- *  Exclusão, Exibição de todos e Exibição de um único registro, e todas as
- *  operações leem e gravam nas tabelas do Oracle através da camada DAO.
- *
- *  Organização das classes (uma por arquivo):
- *
- *   - Entidades      : User, Currency, Wallet, Asset, Transaction,
- *                      CurrencyQuote, TransactionType, BaseEntity
- *   - Acesso a dados : ConnectionFactory e os seis DAOs
- *   - Telas          : Main e as classes Menu*
- *   - Apoio          : Entrada, Validador, Seguranca, Seletor, Formatador
- *   - Fases          : DemonstracaoEmMemoria (Fase 5),
- *                      TesteIntegracaoBanco (Fase 6)
- *
- *  Antes de rodar, execute o script sql/create_tables.sql no seu usuário do
- *  Oracle e confira o usuário e a senha em ConnectionFactory.java.
- * =============================================================================
- */
+/*
+* Antes de rodar, execute o script sql/create_tables.sql no seu usuário do
+* Oracle e confira o usuário e a senha em ConnectionFactory.java.
+* */
+
 public class Main {
 
     private static final CurrencyDAO currencyDAO = new CurrencyDAO();
@@ -35,9 +18,6 @@ public class Main {
     public static void main(String[] args) {
         apresentar();
 
-        // Se o banco não responde, nenhuma opção do sistema vai funcionar
-        // direito. Melhor avisar agora, de uma vez, do que deixar o usuário
-        // levar um erro de SQL em cada tela.
         if (!conexaoDisponivel() && !Entrada.confirmar("Deseja abrir o sistema mesmo assim")) {
             System.out.println("Programa encerrado.");
             return;
@@ -73,9 +53,6 @@ public class Main {
         } while (opcao != 0);
     }
 
-    // -------------------------------------------------------------------------
-    //  Menu de utilitários
-    // -------------------------------------------------------------------------
     private static void menuUtilitarios() {
         int opcao;
 
@@ -111,17 +88,12 @@ public class Main {
         } while (opcao != 0);
     }
 
-    // -------------------------------------------------------------------------
-    //  Apoio
-    // -------------------------------------------------------------------------
-
     private static void apresentar() {
         Formatador.titulo("VOLTZ - MISSÃO TIO PATINHAS");
         System.out.println("  Sistema de carteiras de moedas e criptomoedas.");
         System.out.println("  Os dados são lidos e gravados no banco de dados Oracle.");
     }
 
-    /** Abre e fecha uma conexão só para confirmar que o banco está acessível. */
     private static boolean conexaoDisponivel() {
         System.out.println();
         System.out.println("Conectando ao banco de dados...");
@@ -145,7 +117,6 @@ public class Main {
         }
     }
 
-    /** Conta quantos registros existem em cada tabela, para uma conferência rápida. */
     private static void resumoDoBanco() {
         Formatador.subtitulo("Resumo dos registros do banco");
 

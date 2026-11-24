@@ -1,13 +1,6 @@
 import java.math.BigDecimal;
 import java.util.List;
 
-/**
- * Submenu do módulo de ativos (tabela tb_asset).
- *
- * Um ativo é o SALDO de uma moeda dentro de uma carteira: "a carteira 1 tem
- * 0,006 BTC". Como o ativo só existe dentro de uma carteira, quase toda opção
- * aqui começa escolhendo a carteira.
- */
 public final class MenuAtivo {
 
     private static final AssetDAO assetDAO = new AssetDAO();

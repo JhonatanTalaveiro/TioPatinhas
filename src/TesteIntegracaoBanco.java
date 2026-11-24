@@ -7,25 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * TESTES DE INTEGRAÇÃO COM O BANCO ORACLE (Fase 6)
- * -----------------------------------------------------------------------------
- * Exercita INSERT, SELECT, UPDATE e DELETE nas 6 tabelas da modelagem, através
- * da camada DAO. Este código ficava dentro da Main; foi movido para cá quando a
- * Main virou o programa com menus, e continua acessível pelo menu Utilitários.
- *
- * Dois cuidados importantes:
- *
- * 1. O banco da FIAP é compartilhado e já tem os dados do script DML. Por isso
- *    os testes criam os PRÓPRIOS registros (ids novos e símbolo/e-mail com
- *    sufixo único) e, no final, apagam só o que criaram. Nenhuma linha
- *    pré-existente é alterada ou removida.
- *
- * 2. A ordem respeita as chaves estrangeiras: ao criar, vai das tabelas pai
- *    para as filhas (moeda e usuário primeiro); ao apagar, faz o caminho
- *    inverso. Fora dessa ordem o Oracle recusa com ORA-02291 (parent key not
- *    found) ou ORA-02292 (child record found).
- */
 public final class TesteIntegracaoBanco {
 
     private static final CurrencyDAO currencyDAO = new CurrencyDAO();
@@ -35,7 +16,6 @@ public final class TesteIntegracaoBanco {
     private static final TransactionDAO transactionDAO = new TransactionDAO();
     private static final CurrencyQuoteDAO quoteDAO = new CurrencyQuoteDAO();
 
-    // Placar dos testes
     private static int testesOk = 0;
     private static int testesFalha = 0;
 
@@ -43,8 +23,6 @@ public final class TesteIntegracaoBanco {
     }
 
     public static void executar() {
-        // Zera o placar para que rodar os testes duas vezes na mesma sessão do
-        // programa não some os resultados da execução anterior.
         testesOk = 0;
         testesFalha = 0;
 
@@ -54,15 +32,8 @@ public final class TesteIntegracaoBanco {
             return;
         }
 
-        // Sufixo único por execução: permite rodar os testes várias vezes
-        // seguidas sem esbarrar nas constraints UNIQUE de tb_currency.symbol e
-        // tb_user.email.
         String sufixo = String.valueOf(System.currentTimeMillis() % 100000);
 
-        // Cada etapa devolve null se o registro não chegou a ser gravado. Esse
-        // null é o sinal de que algo falhou (tabela inexistente, por exemplo) -
-        // e aí as etapas seguintes são puladas, em vez de quebrar com
-        // NullPointerException.
         Currency[] moedas = testarCurrencyDAO(sufixo);
         Currency moedaBase = moedas != null ? moedas[0] : null;
         Currency cripto = moedas != null ? moedas[1] : null;
@@ -71,7 +42,6 @@ public final class TesteIntegracaoBanco {
         Wallet carteira = usuario != null ? testarWalletDAO(usuario, moedaBase, cripto) : null;
         Asset ativo = carteira != null ? testarAssetDAO(carteira, cripto) : null;
         Transaction transacao = carteira != null ? testarTransactionDAO(carteira, cripto) : null;
-        // Cotação depende só das moedas, não da carteira.
         CurrencyQuote cotacao = moedas != null ? testarCurrencyQuoteDAO(cripto, moedaBase) : null;
 
         if (carteira == null) {
@@ -86,22 +56,15 @@ public final class TesteIntegracaoBanco {
         placarFinal();
     }
 
-    // -------------------------------------------------------------------------
-    //  1. tb_currency
-    // -------------------------------------------------------------------------
-    // Devolve {moeda base, cripto} relidas do banco, ou null se o INSERT falhou.
     private static Currency[] testarCurrencyDAO(String sufixo) {
         secao("1. tb_currency (CurrencyDAO)");
 
-        // Símbolo tem no máximo 10 caracteres no DDL: "TB" + 5 dígitos cabe.
         Currency base = new Currency("TB" + sufixo, "Moeda Base de Teste", true);
         Currency cripto = new Currency("TC" + sufixo, "Cripto de Teste", false);
 
-        // INSERT
         currencyDAO.inserir(base);
         currencyDAO.inserir(cripto);
 
-        // SELECT por id
         Currency lida = currencyDAO.buscarPorId(base.getId());
         verificar("INSERT + SELECT por id devolvem a moeda base", lida != null);
         if (lida != null) {
@@ -109,7 +72,6 @@ public final class TesteIntegracaoBanco {
             verificar("Flag isFiat gravada corretamente (true)", lida.isFiat());
         }
 
-        // SELECT por símbolo (coluna UNIQUE)
         Currency porSimbolo = currencyDAO.buscarPorSimbolo(cripto.getSymbol());
         verificar("SELECT por símbolo encontra a cripto de teste", porSimbolo != null);
         if (porSimbolo != null) {
@@ -117,7 +79,6 @@ public final class TesteIntegracaoBanco {
             verificar("Flag isFiat gravada corretamente (false)", !porSimbolo.isFiat());
         }
 
-        // SELECT de todos + uso de Collections (HashMap indexado pelo símbolo)
         List<Currency> todas = currencyDAO.listarTodos();
         Map<String, Currency> porCodigo = new HashMap<>();
         for (Currency c : todas) {
@@ -127,12 +88,10 @@ public final class TesteIntegracaoBanco {
         verificar("SELECT de todos inclui as duas moedas de teste",
                 porCodigo.containsKey(base.getSymbol()) && porCodigo.containsKey(cripto.getSymbol()));
 
-        // SELECT filtrado por tipo
         List<Currency> criptos = currencyDAO.listarPorTipo(false);
         verificar("SELECT por tipo traz a cripto e não traz a fiduciária",
                 contemId(criptos, cripto.getId()) && !contemId(criptos, base.getId()));
 
-        // UPDATE - Currency é imutável, então montamos outro objeto com o mesmo id
         Currency renomeada = new Currency(base.getId(), base.getSymbol(), "Moeda Base Renomeada", true);
         currencyDAO.atualizar(renomeada);
 
@@ -140,26 +99,19 @@ public final class TesteIntegracaoBanco {
         verificar("UPDATE alterou o nome da moeda",
                 depoisDoUpdate != null && "Moeda Base Renomeada".equals(depoisDoUpdate.getName()));
 
-        // O DELETE desta tabela fica para o final: carteira, ativo, transação e
-        // cotação ainda vão apontar para estas moedas.
         if (depoisDoUpdate == null || porSimbolo == null) {
             return null;
         }
         return new Currency[]{depoisDoUpdate, porSimbolo};
     }
 
-    // -------------------------------------------------------------------------
-    //  2. tb_user
-    // -------------------------------------------------------------------------
     private static User testarUserDAO(String sufixo) {
         secao("2. tb_user (UserDAO)");
 
         User novo = new User("teste" + sufixo + "@fiap.com.br", "senha123hash", "Usuário de Teste");
 
-        // INSERT
         userDAO.inserir(novo);
 
-        // SELECT por id
         User lido = userDAO.buscarPorId(novo.getId());
         verificar("INSERT + SELECT por id devolvem o usuário", lido != null);
         if (lido == null) {
@@ -170,17 +122,14 @@ public final class TesteIntegracaoBanco {
         verificar("Hash da senha gravado corretamente",
                 novo.getHashedPassword().equals(lido.getHashedPassword()));
 
-        // SELECT pelo e-mail (coluna UNIQUE), usado pelas validações dos menus
         User porEmail = userDAO.buscarPorEmail(novo.getEmail());
         verificar("SELECT por e-mail encontra o usuário de teste",
                 porEmail != null && novo.getId().equals(porEmail.getId()));
 
-        // SELECT de todos
         List<User> todos = userDAO.listarTodos();
         System.out.println("   Usuários cadastrados no banco: " + todos.size());
         verificar("SELECT de todos inclui o usuário de teste", contemId(todos, novo.getId()));
 
-        // UPDATE
         novo.setName("Usuário Atualizado");
         novo.setEmail("atualizado" + sufixo + "@fiap.com.br");
         userDAO.atualizar(novo);
@@ -194,18 +143,13 @@ public final class TesteIntegracaoBanco {
         return novo;
     }
 
-    // -------------------------------------------------------------------------
-    //  3. tb_wallet
-    // -------------------------------------------------------------------------
     private static Wallet testarWalletDAO(User dono, Currency moedaBase, Currency outraMoeda) {
         secao("3. tb_wallet (WalletDAO)");
 
         Wallet carteira = new Wallet(dono, moedaBase);
 
-        // INSERT
         walletDAO.inserir(carteira);
 
-        // SELECT por id - a consulta traz o usuário e a moeda via JOIN
         Wallet lida = walletDAO.buscarPorId(carteira.getId());
         verificar("INSERT + SELECT por id devolvem a carteira", lida != null);
         if (lida == null) {
@@ -215,16 +159,13 @@ public final class TesteIntegracaoBanco {
         verificar("JOIN trouxe a moeda base correta",
                 moedaBase.getId().equals(lida.getBaseCurrency().getId()));
 
-        // SELECT filtrado por usuário
         List<Wallet> doUsuario = walletDAO.listarPorUsuario(dono.getId());
         verificar("SELECT por usuário traz a carteira criada", contemId(doUsuario, carteira.getId()));
 
-        // SELECT de todos
         List<Wallet> todas = walletDAO.listarTodos();
         System.out.println("   Carteiras cadastradas no banco: " + todas.size());
         verificar("SELECT de todos inclui a carteira de teste", contemId(todas, carteira.getId()));
 
-        // UPDATE - troca a moeda base da carteira
         carteira.setBaseCurrency(outraMoeda);
         walletDAO.atualizar(carteira);
 
@@ -233,41 +174,31 @@ public final class TesteIntegracaoBanco {
                 depoisDoUpdate != null
                         && outraMoeda.getId().equals(depoisDoUpdate.getBaseCurrency().getId()));
 
-        // Volta a moeda base original para o resto dos testes
         carteira.setBaseCurrency(moedaBase);
         walletDAO.atualizar(carteira);
 
         return carteira;
     }
 
-    // -------------------------------------------------------------------------
-    //  4. tb_asset
-    // -------------------------------------------------------------------------
     private static Asset testarAssetDAO(Wallet carteira, Currency moeda) {
         secao("4. tb_asset (AssetDAO)");
 
         Asset ativo = new Asset(moeda, new BigDecimal("1.50000000"));
 
-        // INSERT - o ativo precisa saber a qual carteira pertence
         assetDAO.inserir(ativo, carteira.getId());
 
-        // SELECT por id
         Asset lido = assetDAO.buscarPorId(ativo.getId());
         verificar("INSERT + SELECT por id devolvem o ativo", lido != null);
         if (lido != null) {
-            // BigDecimal.equals também compara a escala: 1.5 e 1.50000000 seriam
-            // considerados diferentes. Em valores numéricos use sempre compareTo.
             verificar("Quantidade gravada corretamente",
                     ativo.getQuantity().compareTo(lido.getQuantity()) == 0);
             verificar("JOIN trouxe a moeda correta", moeda.getId().equals(lido.getCurrency().getId()));
         }
 
-        // SELECT filtrado por carteira
         List<Asset> daCarteira = assetDAO.listarPorCarteira(carteira.getId());
         verificar("SELECT por carteira traz o ativo criado", contemId(daCarteira, ativo.getId()));
         verificar("A carteira de teste tem exatamente 1 ativo", daCarteira.size() == 1);
 
-        // UPDATE - simula um depósito somando à quantidade atual
         ativo.setQuantity(ativo.getQuantity().add(new BigDecimal("0.25")));
         assetDAO.atualizar(ativo);
 
@@ -279,15 +210,9 @@ public final class TesteIntegracaoBanco {
         return ativo;
     }
 
-    // -------------------------------------------------------------------------
-    //  5. tb_transaction
-    // -------------------------------------------------------------------------
     private static Transaction testarTransactionDAO(Wallet carteira, Currency moeda) {
         secao("5. tb_transaction (TransactionDAO)");
 
-        // withNano(0) evita falso negativo na comparação: a coluna TIMESTAMP do
-        // Oracle guarda até microssegundos, enquanto LocalDateTime.now() pode vir
-        // com nanossegundos, que seriam truncados na ida ao banco.
         LocalDateTime agora = LocalDateTime.now().withNano(0);
 
         Transaction transacao = new Transaction(
@@ -295,10 +220,8 @@ public final class TesteIntegracaoBanco {
                 new BigDecimal("0.50000000"), new BigDecimal("1000.00"),
                 TransactionType.BUY, agora);
 
-        // INSERT
         transactionDAO.inserir(transacao);
 
-        // SELECT por id
         Transaction lida = transactionDAO.buscarPorId(transacao.getId());
         verificar("INSERT + SELECT por id devolvem a transação", lida != null);
         if (lida != null) {
@@ -312,11 +235,9 @@ public final class TesteIntegracaoBanco {
                     lida.getWallet() != null && carteira.getId().equals(lida.getWallet().getId()));
         }
 
-        // SELECT filtrado por carteira
         List<Transaction> daCarteira = transactionDAO.listarPorCarteira(carteira);
         verificar("SELECT por carteira traz a transação criada", contemId(daCarteira, transacao.getId()));
 
-        // UPDATE - corrige o tipo e o preço da operação
         transacao.setType(TransactionType.SELL);
         transacao.setPriceAtTime(new BigDecimal("1200.00"));
         transactionDAO.atualizar(transacao);
@@ -330,9 +251,6 @@ public final class TesteIntegracaoBanco {
         return transacao;
     }
 
-    // -------------------------------------------------------------------------
-    //  6. tb_currency_quote
-    // -------------------------------------------------------------------------
     private static CurrencyQuote testarCurrencyQuoteDAO(Currency moeda, Currency moedaBase) {
         secao("6. tb_currency_quote (CurrencyQuoteDAO)");
 
@@ -344,11 +262,9 @@ public final class TesteIntegracaoBanco {
         CurrencyQuote recente = new CurrencyQuote(
                 UUID.randomUUID(), moeda, moedaBase, new BigDecimal("1100.00"), agora);
 
-        // INSERT
         quoteDAO.inserir(antiga);
         quoteDAO.inserir(recente);
 
-        // SELECT por id
         CurrencyQuote lida = quoteDAO.buscarPorId(recente.getId());
         verificar("INSERT + SELECT por id devolvem a cotação", lida != null);
         if (lida != null) {
@@ -360,16 +276,13 @@ public final class TesteIntegracaoBanco {
                     moedaBase.getId().equals(lida.getBaseCurrency().getId()));
         }
 
-        // SELECT filtrado por moeda
         List<CurrencyQuote> daMoeda = quoteDAO.listarPorMoeda(moeda.getId());
         verificar("SELECT por moeda traz as duas cotações criadas", daMoeda.size() == 2);
 
-        // SELECT com ORDER BY + ROWNUM: a cotação mais recente do par
         CurrencyQuote maisRecente = quoteDAO.buscarMaisRecente(moeda.getId(), moedaBase.getId());
         verificar("SELECT da cotação mais recente devolve a de hoje, não a de ontem",
                 maisRecente != null && recente.getId().equals(maisRecente.getId()));
 
-        // UPDATE - corrige o preço lançado errado
         recente.setPrice(new BigDecimal("1150.00"));
         quoteDAO.atualizar(recente);
 
@@ -378,21 +291,12 @@ public final class TesteIntegracaoBanco {
                 depoisDoUpdate != null
                         && depoisDoUpdate.getPrice().compareTo(new BigDecimal("1150.00")) == 0);
 
-        // Apaga já a cotação antiga, para o teste de DELETE em massa do final
-        // sobrar só com a recente.
         quoteDAO.deletar(antiga.getId());
         verificar("DELETE removeu a cotação antiga", quoteDAO.buscarPorId(antiga.getId()) == null);
 
         return recente;
     }
 
-    // -------------------------------------------------------------------------
-    //  LIMPEZA - testa o DELETE de todas as tabelas
-    // -------------------------------------------------------------------------
-    //  Ordem inversa das chaves estrangeiras: primeiro os registros filhos
-    //  (cotação, transação, ativo), depois carteira, e por último usuário e
-    //  moedas, que são as tabelas pai.
-    // -------------------------------------------------------------------------
     private static void limparDadosDeTeste(CurrencyQuote cotacao, Transaction transacao, Asset ativo,
                                            Wallet carteira, User usuario, Currency moedaBase, Currency cripto) {
         secao("7. DELETE de todos os registros de teste");
@@ -404,7 +308,6 @@ public final class TesteIntegracaoBanco {
         }
 
         if (carteira != null) {
-            // DELETE em massa: apaga todas as transações e ativos da carteira de teste
             transactionDAO.deletarPorCarteira(carteira.getId());
             verificar("Transações da carteira removidas de tb_transaction",
                     transactionDAO.listarPorCarteira(carteira).isEmpty());
@@ -436,13 +339,6 @@ public final class TesteIntegracaoBanco {
         }
     }
 
-    // =========================================================================
-    //  APOIO AOS TESTES
-    // =========================================================================
-
-    // Confere a conexão antes de começar. Os DAOs capturam SQLException e só
-    // imprimem a mensagem, então sem esta checagem uma senha errada apareceria
-    // como dezenas de "Erro ao ..." sem explicar a causa.
     private static boolean bancoDisponivel() {
         try (Connection conn = ConnectionFactory.getConnection()) {
             System.out.println("Conexão com o Oracle estabelecida com sucesso.");
@@ -459,7 +355,6 @@ public final class TesteIntegracaoBanco {
         }
     }
 
-    // Procura um id dentro de uma lista de entidades (todas herdam de BaseEntity)
     private static boolean contemId(List<? extends BaseEntity> lista, UUID id) {
         for (BaseEntity entidade : lista) {
             if (entidade.getId().equals(id)) {
